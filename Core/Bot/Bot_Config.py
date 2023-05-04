@@ -11,7 +11,7 @@ bot = telebot.TeleBot(telegramToken)
 @bot.message_handler(commands=['start'])
 def Wellcome_Message(message):
     keyboard = InlineKeyboardMarkup(row_width=3)
-    search_button = InlineKeyboardButton(text="جستجو فیلم", callback_data="/search")
+    search_button = InlineKeyboardButton(text="جستجو فیلم", switch_inline_query_current_chat='')
     genres_button = InlineKeyboardButton(text="ژانر فیلم", callback_data="/genres")
     gpt_button = InlineKeyboardButton(text="پیشنهاد ChatGPT", callback_data="/gptsuggest")
     filoger_button = InlineKeyboardButton(text="مدرسه فیلاگر", url="https://filoger.com")
@@ -27,7 +27,7 @@ def Wellcome_Message(message):
 @bot.message_handler(commands=['help'])
 def Help(message):
     keyboard = InlineKeyboardMarkup(row_width=3)
-    search_button = InlineKeyboardButton(text="جستجو فیلم", callback_data="/search",switch_inline_query_current_chat='@' + bot.get_me().username)
+    search_button = InlineKeyboardButton(text="جستجو فیلم", switch_inline_query_current_chat='')
     genres_button = InlineKeyboardButton(text="ژانر فیلم", callback_data="/genres")
     gpt_button = InlineKeyboardButton(text="پیشنهاد ChatGPT", callback_data="/gptsuggest")
     filoger_button = InlineKeyboardButton(text="مدرسه فیلاگر", url="https://filoger.com")
@@ -44,10 +44,19 @@ def GPT_Search(message):
     bot.register_next_step_handler(replay_message, GPT_Suggest_Result)
 
 
+@bot.message_handler(commands=['about'])
+def GPT_Search(message):
+    chat_id = message.chat.id
+    replay_message = bot.send_message(chat_id, 'این ربات با استفاده از کتابخانه pythonTelegramBot نوشته شده است.\n هیچ دیتایی ذخیره نمی شود.\nبا استفاده از chatGPT می توانید فضای فیلم را تعریف کرده و نام فیلم را پیدا کنید')
+    bot.register_next_step_handler(replay_message, GPT_Suggest_Result)
+
+
 @bot.message_handler(commands=['search'])
 def Search(message):
     chat_id = message.chat.id
-    replay_message = bot.send_message(chat_id, 'نام فیلم مورد نظر خود را وارد کنید:',reply_markup=markup)
+    button = InlineKeyboardButton(text='جستجو فیلم', switch_inline_query_current_chat='')
+    keboard = InlineKeyboardMarkup().add(button)
+    replay_message = bot.send_message(chat_id, 'نام فیلم مورد نظر خود را وارد کنید:', reply_markup=keboard)
     bot.register_next_step_handler(replay_message, Movie_with_Search)
 
 
@@ -81,7 +90,7 @@ def Movie_with_Search(query):
                     title=item['title'],
                     description=item['description'],
                     input_message_content= InputTextMessageContent(message_text = "movie_{0}".format(item['id'])),
-                    thumbnail_url=item['image']
+                    thumbnail_url=item['image'],
                 )
                 results.append(article)
             bot.answer_inline_query(query.id, results)
@@ -147,6 +156,7 @@ def Movie_Genre_Details(call):
     movie_Id= call.data.split("_")[1]
     chat_id = call.from_user.id
     movie = imdb.GetMovieDetails(movie_Id)
+    print(movie)
     trailer = movie['trailer']['link']
     image = movie['image']
     movie_type=''
@@ -203,7 +213,7 @@ def Movie_Search_Details(message):
     نام فیلم : {0} \n\nسال تولید : {1} \n\nنوع : {2} \n\nبازیگران : {3} \n\nداستان : {4}
     '''.format(movie['fullTitle'], movie['year'], movie_type, movie['stars'], movie['plot'])
     keyboards = InlineKeyboardMarkup(row_width=3)
-    search_agin = InlineKeyboardButton(text= "جستجوی مجدد", callback_data="/search" )
+    search_agin = InlineKeyboardButton(text= "جستجوی مجدد", switch_inline_query_current_chat='' )
     watch_trailer = InlineKeyboardButton(text= "تماشای تریلر", url=trailer )
     keyboards.add(search_agin, watch_trailer)
     bot.send_photo(chat_id, image, reply_markup=keyboards, caption=caption)
@@ -232,7 +242,7 @@ def echo_message(message):
 
 def Search_Error_Handler(message):
     keyboards = InlineKeyboardMarkup()
-    search = InlineKeyboardButton(text="جستجو فیلم دلخواه", callback_data="/search")
+    search = InlineKeyboardButton(text="جستجو فیلم دلخواه", switch_inline_query_current_chat='')
     genres = InlineKeyboardButton(text="جستجو براساس ژانر", callback_data="/genres")
     gpt = InlineKeyboardButton(text="پیشنهاد ChatGPT", callback_data="/gptsuggest")
     keyboards.add(search, genres, gpt)
