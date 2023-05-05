@@ -6,8 +6,6 @@ import Core.GPT.GPT as gpt
 telegramToken = '6265426880:AAFHClwUcG43xlINHXkmpDpXrTFqWWjg7SI'
 
 bot = telebot.TeleBot(telegramToken)
-username = bot.get_me().username
-print(username)
 
 @bot.message_handler(commands=['start'])
 def Wellcome_Message(message):
@@ -48,7 +46,6 @@ def GPT_Search(message):
 def About(message):
     chat_id = message.chat.id
     replay_message = bot.send_message(chat_id, 'The pyTelegrambotapi(telebot), openai, Flask libraries  has been used to implement this robot')
-    bot.register_next_step_handler(replay_message, GPT_Suggest_Result)
 
 
 @bot.message_handler(commands=['search'])
@@ -155,25 +152,20 @@ def Movie_Genre_Details(call):
     chat_id = call.from_user.id
     movie = imdb.GetMovieDetails(movie_Id)
     trailer = movie['trailer']['link']
-    image = ''
-    if 'None' not in item['image']:
-        image = item['image']
+    image =  movie['image']
     movie_type= movie['type']
     caption = ''' 
      Title: {0} \n\nYear : {1} \n\nType : {2} \n\nActors : {3} \n\nStory : {4}
      '''.format(movie['fullTitle'], movie['year'], movie_type, movie['stars'], movie['plot'])
     keyboards = InlineKeyboardMarkup(row_width=3)
-    search_agin = InlineKeyboardButton(text= "Search agin", callback_data="/search" )
+    search_agin = InlineKeyboardButton(text= "Search agin", switch_inline_query_current_chat='' )
     watch_trailer = InlineKeyboardButton(text= "Watch Trailer", url=trailer )
     keyboards.add(search_agin, watch_trailer)
-    if image  == '':
-        bot.send_message(chat_id, caption , reply_markup=keyboards)
-    else:
-        bot.send_photo(chat_id, image, reply_markup=keyboards, caption=caption)
+    bot.send_photo(chat_id, image, reply_markup=keyboards, caption=caption)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('gpt_'))
-def Movie_Genre_Details(call):
+def Movie_GPT_Details(call):
     movie_text= call.data.split("_")[1]
     chat_id = call.from_user.id
     movies = imdb.SearchByTitle(movie_text)
